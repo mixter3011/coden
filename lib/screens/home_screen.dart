@@ -53,7 +53,6 @@ class _HomeScreenState extends State<HomeScreen> {
           padding: const EdgeInsets.all(16.0),
           child: ListView(
             children: [
-              // Profile Section
               Row(
                 children: [
                   const ProfilePic(radius: 40),
@@ -69,12 +68,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 ],
               ),
               const SizedBox(height: 20),
-
-              // Contest Statistics
               _buildContestStatisticsSection(userContestRanking),
               const SizedBox(height: 20),
-
-              // Rating Progress Chart
               Text(
                 'Rating Progress Over Contests',
                 style: GoogleFonts.poppins(
@@ -86,8 +81,6 @@ class _HomeScreenState extends State<HomeScreen> {
               const SizedBox(height: 10),
               _buildRatingProgressChart(ratingPoints),
               const SizedBox(height: 20),
-
-              // Contest History
               Text(
                 'Contest History',
                 style: GoogleFonts.poppins(
@@ -155,28 +148,25 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildRatingProgressChart(List<FlSpot> ratingPoints) {
     return Center(
       child: SizedBox(
-        width: MediaQuery.of(context).size.width *
-            0.8, // Adjust width to 90% of the screen
+        width: MediaQuery.of(context).size.width * 0.8,
         height: 150,
         child: LineChart(
           LineChartData(
             gridData: const FlGridData(show: false),
-            titlesData:
-                const FlTitlesData(show: false), // Keep the original setting
+            titlesData: const FlTitlesData(show: false),
             borderData: FlBorderData(
               show: true,
               border: const Border(
                 left: BorderSide.none,
                 top: BorderSide.none,
                 right: BorderSide.none,
-                bottom: BorderSide(
-                    color: Colors.white24), // Show bottom border only
+                bottom: BorderSide(color: Colors.white24),
               ),
             ),
             lineBarsData: [
               LineChartBarData(
                 spots: ratingPoints,
-                isCurved: true, // Smooth curve for better aesthetics
+                isCurved: true,
                 color: Colors.blue,
                 barWidth: 3,
                 isStrokeCapRound: true,
