@@ -85,7 +85,6 @@ class _LoginScreenState extends State<LoginScreen> {
     try {
       final userData = await _fetchLeetCodeData(username);
 
-      // Store username in Hive
       final box = Hive.box('userBox');
       await box.put('lc-userId', username);
 

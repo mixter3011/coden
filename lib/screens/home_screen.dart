@@ -1,7 +1,8 @@
+import 'package:coden/components/contest_history.dart';
 import 'package:coden/components/profile_pic.dart';
 import 'package:flutter/material.dart';
-import 'package:fl_chart/fl_chart.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:fl_chart/fl_chart.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -193,19 +194,16 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildContestHistoryList(List<dynamic> contestHistory) {
     return Column(
       children: contestHistory.map((contest) {
-        return Card(
-          color: const Color(0xFF2C2F3E),
-          margin: const EdgeInsets.symmetric(vertical: 8),
-          child: ListTile(
-            title: Text(
-              contest['contest']['title'],
-              style: GoogleFonts.poppins(color: Colors.white),
-            ),
-            subtitle: Text(
-              'Rating: ${contest['rating']}, Solved: ${contest['problemsSolved']} / ${contest['totalProblems']}',
-              style: GoogleFonts.poppins(color: Colors.white70),
-            ),
-          ),
+        final title = contest['contest']['title'];
+        final rating = (contest['rating'] ?? 0.0).toInt();
+        final solved = contest['problemsSolved'] ?? 0;
+        final totalProblems = contest['totalProblems'] ?? 0;
+
+        final subtitle = 'Rating: $rating | Solved: $solved/$totalProblems';
+
+        return ContestHistoryCard(
+          title: title,
+          subtitle: subtitle,
         );
       }).toList(),
     );
