@@ -20,29 +20,83 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<Map<String, dynamic>> _fetchLeetCodeData(String username) async {
     const String apiUrl = 'https://leetcode.com/graphql';
     final String query = '''
-    query {
-      userContestRanking(username: "$username") {
-        attendedContestsCount
-        rating
-        globalRanking
-        totalParticipants
-        topPercentage    
+  query {
+    matchedUser(username: "$username") {
+      username
+      githubUrl
+      twitterUrl
+      linkedinUrl
+      contributions {
+          points
+          questionCount
+          testcaseCount
       }
-      userContestRankingHistory(username: "$username") {
-        attended
-        trendDirection
-        problemsSolved
-        totalProblems
-        finishTimeInSeconds
-        rating
-        ranking
-        contest {
-          title
-          startTime
-        }
+      profile {
+          realName
+          userAvatar
+          birthday
+          ranking
+          reputation
+          websites
+          countryName
+          company
+          school
+          skillTags
+          aboutMe
+          starRating
+      }
+      badges {
+          id
+          displayName
+          icon
+          creationDate
+      }
+      upcomingBadges {
+          name
+          icon
+      }
+      activeBadge {
+          id
+          displayName
+          icon
+          creationDate
+      }
+      submitStats {
+          totalSubmissionNum {
+              difficulty
+              count
+              submissions
+          }
+          acSubmissionNum {
+              difficulty
+              count
+              submissions
+          }
+      }
+      submissionCalendar
+    }
+    userContestRanking(username: "$username") {
+      attendedContestsCount
+      rating
+      globalRanking
+      totalParticipants
+      topPercentage    
+    }
+    userContestRankingHistory(username: "$username") {
+      attended
+      trendDirection
+      problemsSolved
+      totalProblems
+      finishTimeInSeconds
+      rating
+      ranking
+      contest {
+        title
+        startTime
       }
     }
-    ''';
+  }
+  ''';
 
     try {
       final response = await http.post(
@@ -53,16 +107,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
       if (response.statusCode == 200) {
         final Map<String, dynamic> data = jsonDecode(response.body)['data'];
-        final List userContestRankingHistory =
-            data['userContestRankingHistory'];
-        final attendedContests = userContestRankingHistory
-            .where((contest) => contest['attended'] == true)
-            .toList();
-
-        return {
-          'userContestRanking': data['userContestRanking'],
-          'userContestRankingHistory': attendedContests,
-        };
+        return data;
       } else {
         throw Exception('Failed to retrieve LeetCode data');
       }

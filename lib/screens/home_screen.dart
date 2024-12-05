@@ -1,9 +1,10 @@
-import 'package:coden/components/contest_history.dart';
-import 'package:coden/components/profile_pic.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:coden/components/contest_history.dart';
+import 'package:coden/components/detail_card.dart';
+import 'package:coden/components/profile_pic.dart';
 
 class HomeScreen extends StatefulWidget {
   final Map<String, dynamic> data;
@@ -16,11 +17,13 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   String _userId = '';
+  late List<dynamic> _filteredContestHistory;
 
   @override
   void initState() {
     super.initState();
     _loadUserData();
+    _filterContestHistory();
   }
 
   void _loadUserData() {
@@ -30,13 +33,22 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  List<FlSpot> _generateRatingPoints() {
-    final userContestRankingHistory = widget.data['userContestRankingHistory'];
+  void _filterContestHistory() {
+    final contestHistory = widget.data['userContestRankingHistory'] ?? [];
+
+    _filteredContestHistory = contestHistory
+        .where((contest) =>
+            (contest['totalProblems'] ?? 0) > 0 &&
+            (contest['problemsSolved'] ?? 0) > 0)
+        .toList();
+  }
+
+  List<FlSpot> _generateFilteredRatingPoints() {
     return List.generate(
-      userContestRankingHistory.length,
+      _filteredContestHistory.length,
       (index) => FlSpot(
         index.toDouble(),
-        userContestRankingHistory[index]['rating'] ?? 0.0,
+        _filteredContestHistory[index]['rating']?.toDouble() ?? 0.0,
       ),
     );
   }
@@ -44,8 +56,10 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final userContestRanking = widget.data['userContestRanking'];
-    final userContestRankingHistory = widget.data['userContestRankingHistory'];
-    final ratingPoints = _generateRatingPoints();
+    final ratingPoints = _generateFilteredRatingPoints();
+
+    final userAvatar =
+        widget.data['matchedUser']?['profile']?['userAvatar'] ?? '';
 
     return Scaffold(
       backgroundColor: const Color(0xFF232530),
@@ -56,7 +70,10 @@ class _HomeScreenState extends State<HomeScreen> {
             children: [
               Row(
                 children: [
-                  const ProfilePic(radius: 40),
+                  ProfilePic(
+                    radius: 40,
+                    avatarUrl: userAvatar,
+                  ),
                   const SizedBox(width: 16),
                   Text(
                     _userId.toUpperCase(),
@@ -64,6 +81,58 @@ class _HomeScreenState extends State<HomeScreen> {
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+              const DetailsCard(
+                title: "PROGRESS",
+                icon: Icons.menu_book_outlined,
+                color: Color.fromARGB(255, 255, 246, 144),
+                dynamicText: 'Out of 3374 Questions',
+              ),
+              const SizedBox(height: 5),
+              const Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: DetailsCard(
+                      title: "STATS",
+                      icon: Icons.show_chart,
+                      color: Color.fromARGB(255, 255, 136, 57),
+                      dynamicText: 'LOL',
+                    ),
+                  ),
+                  SizedBox(width: 10),
+                  Expanded(
+                    child: DetailsCard(
+                      title: "LEVEL",
+                      icon: Icons.leaderboard,
+                      color: Color.fromARGB(255, 192, 235, 128),
+                      dynamicText: 'LOL',
+                    ),
+                  ),
+                ],
+              ),
+              const Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: DetailsCard(
+                      title: "STATS",
+                      icon: Icons.show_chart,
+                      color: Color.fromARGB(255, 163, 71, 178),
+                      dynamicText: 'LOL',
+                    ),
+                  ),
+                  SizedBox(width: 10),
+                  Expanded(
+                    child: DetailsCard(
+                      title: "LEVEL",
+                      icon: Icons.leaderboard,
+                      color: Color.fromARGB(255, 138, 205, 255),
+                      dynamicText: 'LOL',
                     ),
                   ),
                 ],
@@ -91,7 +160,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
               const SizedBox(height: 10),
-              _buildContestHistoryList(userContestRankingHistory),
+              _buildContestHistoryList(_filteredContestHistory),
             ],
           ),
         ),
@@ -167,10 +236,10 @@ class _HomeScreenState extends State<HomeScreen> {
             lineBarsData: [
               LineChartBarData(
                 spots: ratingPoints,
-                isCurved: true,
+                isCurved: false,
                 color: Colors.blue,
                 barWidth: 3,
-                isStrokeCapRound: true,
+                isStrokeCapRound: false,
                 dotData: const FlDotData(show: true),
                 belowBarData: BarAreaData(
                   show: false,

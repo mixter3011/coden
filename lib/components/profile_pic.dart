@@ -1,29 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:hive_flutter/hive_flutter.dart';
 
 class ProfilePic extends StatelessWidget {
   final double radius;
+  final String avatarUrl;
 
   const ProfilePic({
     super.key,
     this.radius = 50.0,
+    required this.avatarUrl, // Now accepts avatarUrl from HomeScreen
   });
 
   @override
   Widget build(BuildContext context) {
-    final box = Hive.box('userBox');
-    final username = box.get('lc-userId', defaultValue: 'Unknown');
-
-    final profilePicUrl =
-        'https://assets.leetcode.com/users/$username/avatar_1695594708.png';
-
     return CircleAvatar(
       radius: radius,
       backgroundColor: Colors.white,
       child: ClipOval(
         child: CachedNetworkImage(
-          imageUrl: profilePicUrl,
+          imageUrl: avatarUrl, // Use the passed avatarUrl
           placeholder: (context, url) => const CircularProgressIndicator(),
           errorWidget: (context, url, error) => Icon(
             Icons.account_circle,

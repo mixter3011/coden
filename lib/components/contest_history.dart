@@ -13,7 +13,6 @@ class ContestHistoryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Extract the contest number from the title
     final regex = RegExp(r'\d+$');
     final match = regex.firstMatch(title);
     final contestNumber = match != null ? match.group(0) : '';
@@ -21,7 +20,6 @@ class ContestHistoryCard extends StatelessWidget {
         ? title.replaceAll(contestNumber, '').trim()
         : title;
 
-    // Determine the image based on the contest type
     String? imagePath;
     if (mainTitle.contains('Weekly')) {
       imagePath = 'lib/assets/images/weekly.png';
@@ -85,7 +83,6 @@ class ContestHistoryCard extends StatelessWidget {
               alignment: Alignment.center,
               child: Stack(
                 children: [
-                  // Outer border text
                   Text(
                     contestNumber,
                     style: GoogleFonts.poppins(
@@ -97,7 +94,6 @@ class ContestHistoryCard extends StatelessWidget {
                         ..color = Colors.white,
                     ),
                   ),
-                  // Inner fill text (matches the card's background)
                   Text(
                     contestNumber,
                     style: GoogleFonts.poppins(
