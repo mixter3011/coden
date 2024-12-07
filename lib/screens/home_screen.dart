@@ -5,6 +5,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:coden/components/contest_history.dart';
 import 'package:coden/components/detail_card.dart';
 import 'package:coden/components/profile_pic.dart';
+import 'package:intl/intl.dart';
 
 class HomeScreen extends StatefulWidget {
   final Map<String, dynamic> data;
@@ -18,24 +19,48 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   String _userId = '';
   late List<dynamic> _filteredContestHistory;
-
+  late String _userRanking = 'N/A';
   @override
   void initState() {
     super.initState();
     _loadUserData();
     _filterContestHistory();
+    _extractSubmissionStats();
+  }
+
+  late int _totalSolved = 0;
+
+  void _extractSubmissionStats() {
+    final submitStats = widget.data['matchedUser']?['submitStats'];
+    if (submitStats != null) {
+      final acSubmissionNum =
+          submitStats['acSubmissionNum'] as List<dynamic>? ?? [];
+      final totalCount = acSubmissionNum.firstWhere(
+            (item) => item['difficulty'] == 'All',
+            orElse: () => {'count': 0},
+          )['count'] ??
+          0;
+      setState(() {
+        _totalSolved = totalCount;
+      });
+    }
   }
 
   void _loadUserData() {
     final box = Hive.box('userBox');
     setState(() {
       _userId = box.get('lc-userId', defaultValue: 'Unknown User');
+      final rawRanking = widget.data['matchedUser']?['profile']?['ranking'];
+      if (rawRanking != null) {
+        _userRanking = NumberFormat.decimalPattern().format(rawRanking);
+      } else {
+        _userRanking = 'N/A';
+      }
     });
   }
 
   void _filterContestHistory() {
     final contestHistory = widget.data['userContestRankingHistory'] ?? [];
-
     _filteredContestHistory = contestHistory
         .where((contest) =>
             (contest['totalProblems'] ?? 0) > 0 &&
@@ -57,7 +82,6 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     final userContestRanking = widget.data['userContestRanking'];
     final ratingPoints = _generateFilteredRatingPoints();
-
     final userAvatar =
         widget.data['matchedUser']?['profile']?['userAvatar'] ?? '';
 
@@ -86,11 +110,13 @@ class _HomeScreenState extends State<HomeScreen> {
                 ],
               ),
               const SizedBox(height: 20),
-              const DetailsCard(
+              // Update dynamicText with _totalSolved
+              DetailsCard(
                 title: "PROGRESS",
                 icon: Icons.menu_book_outlined,
-                color: Color.fromARGB(255, 255, 246, 144),
-                dynamicText: 'Out of 3374 Questions',
+                color: const Color.fromARGB(255, 255, 246, 144),
+                dynamicText: '$_totalSolved',
+                dynamicText2: 'Out of 3374\n$_userRanking platform ranking',
               ),
               const SizedBox(height: 5),
               const Row(
@@ -101,16 +127,18 @@ class _HomeScreenState extends State<HomeScreen> {
                       title: "STATS",
                       icon: Icons.show_chart,
                       color: Color.fromARGB(255, 255, 136, 57),
-                      dynamicText: 'LOL',
+                      dynamicText: '',
+                      dynamicText2: '',
                     ),
                   ),
                   SizedBox(width: 10),
                   Expanded(
                     child: DetailsCard(
-                      title: "LEVEL",
-                      icon: Icons.leaderboard,
+                      title: "STREAK",
+                      icon: Icons.bolt,
                       color: Color.fromARGB(255, 192, 235, 128),
-                      dynamicText: 'LOL',
+                      dynamicText: '',
+                      dynamicText2: '',
                     ),
                   ),
                 ],
@@ -123,7 +151,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       title: "STATS",
                       icon: Icons.show_chart,
                       color: Color.fromARGB(255, 163, 71, 178),
-                      dynamicText: 'LOL',
+                      dynamicText: '',
+                      dynamicText2: '',
                     ),
                   ),
                   SizedBox(width: 10),
@@ -132,7 +161,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       title: "LEVEL",
                       icon: Icons.leaderboard,
                       color: Color.fromARGB(255, 138, 205, 255),
-                      dynamicText: 'LOL',
+                      dynamicText: '',
+                      dynamicText2: '',
                     ),
                   ),
                 ],

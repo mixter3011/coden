@@ -6,6 +6,7 @@ class DetailsCard extends StatelessWidget {
   final IconData icon;
   final Color color;
   final String dynamicText;
+  final String dynamicText2;
 
   const DetailsCard({
     super.key,
@@ -13,6 +14,7 @@ class DetailsCard extends StatelessWidget {
     required this.icon,
     required this.color,
     required this.dynamicText,
+    required this.dynamicText2,
   });
 
   @override
@@ -36,23 +38,36 @@ class DetailsCard extends StatelessWidget {
                 color: Colors.black,
               ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 10),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Icon(
-                  icon,
-                  size: 50,
-                  color: Colors.black,
-                ),
-                Text(
-                  dynamicText,
-                  style: GoogleFonts.poppins(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.black,
-                  ),
-                  textAlign: TextAlign.center,
+                Row(
+                  children: [
+                    Icon(
+                      icon,
+                      size: 50,
+                      color: Colors.black,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      dynamicText,
+                      style: GoogleFonts.poppins(
+                        fontSize: 38,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      dynamicText2,
+                      style: GoogleFonts.poppins(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black,
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),

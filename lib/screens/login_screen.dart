@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:html/parser.dart';
 
 import 'home_screen.dart';
 
@@ -16,6 +17,30 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _usernameController = TextEditingController();
   bool _isLoading = false;
+
+  Future<String?> _scrapeLeetCodeSpanValue(String username) async {
+    final String url = 'https://leetcode.com/u/$username/';
+    try {
+      final response = await http.get(Uri.parse(url));
+
+      if (response.statusCode == 200) {
+        final document = parse(response.body);
+        var elements = document.getElementsByClassName(
+          'mx-1 text-sm font-medium text-brand-orange dark:text-dark-brand-orange',
+        );
+        if (elements.isNotEmpty) {
+          return elements[0].text.trim();
+        } else {
+          throw Exception('Span element not found');
+        }
+      } else {
+        throw Exception('Failed to load LeetCode page');
+      }
+    } catch (e) {
+      print('Error scraping LeetCode data: $e');
+      return null;
+    }
+  }
 
   Future<Map<String, dynamic>> _fetchLeetCodeData(String username) async {
     const String apiUrl = 'https://leetcode.com/graphql';
@@ -129,6 +154,15 @@ class _LoginScreenState extends State<LoginScreen> {
 
     try {
       final userData = await _fetchLeetCodeData(username);
+      final scrapedValue = await _scrapeLeetCodeSpanValue(username);
+      print('Scraped value: $scrapedValue');
+
+      final submitStats = userData['matchedUser']?['submitStats'];
+      final submissionCalendar = userData['matchedUser']?['submissionCalendar'];
+
+      print('$userData');
+      print('submitStats: $submitStats');
+      print('submissionCalendar: $submissionCalendar');
 
       final box = Hive.box('userBox');
       await box.put('lc-userId', username);
