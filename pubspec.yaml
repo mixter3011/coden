@@ -74,6 +74,13 @@ flutter:
   assets:
     - lib/assets/images/weekly.png
     - lib/assets/images/biweekly.png
+    - lib/assets/images/C.png
+    - lib/assets/images/cpp.png
+    - lib/assets/images/java.png
+    - lib/assets/images/js.png
+    - lib/assets/images/py.png
+    - lib/assets/images/streak.png
+    - lib/assets/images/stats.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

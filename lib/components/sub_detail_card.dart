@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-class DetailsCard extends StatelessWidget {
+class SubDetailsCard extends StatelessWidget {
   final String title;
-  final IconData icon;
+  final String imagePath;
   final Color color;
   final String dynamicText;
   final String dynamicText2;
 
-  const DetailsCard({
+  const SubDetailsCard({
     super.key,
     required this.title,
-    required this.icon,
+    required this.imagePath,
     required this.color,
     required this.dynamicText,
     required this.dynamicText2,
@@ -19,10 +19,7 @@ class DetailsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final int progressValue = int.tryParse(dynamicText) ?? 0;
-    const int maxProgress = 3385;
-    final double progressPercent =
-        (progressValue / maxProgress).clamp(0.0, 1.0);
+    final isNetworkImage = Uri.tryParse(imagePath)?.hasAbsolutePath ?? false;
 
     return Card(
       color: color,
@@ -49,25 +46,37 @@ class DetailsCard extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    Icon(
-                      icon,
-                      size: 30,
-                      color: Colors.black,
-                    ),
-                    const SizedBox(width: 8),
+                    if (isNetworkImage)
+                      Image.network(
+                        imagePath,
+                        width: 55,
+                        height: 55,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return const Icon(Icons.error, color: Colors.red);
+                        },
+                      )
+                    else
+                      Image.asset(
+                        imagePath,
+                        height: 40,
+                        width: 40,
+                        fit: BoxFit.cover,
+                      ),
+                    const SizedBox(width: 12),
                     Text(
                       dynamicText,
                       style: GoogleFonts.poppins(
-                        fontSize: 40,
+                        fontSize: 12,
                         fontWeight: FontWeight.w600,
                         color: Colors.black,
                       ),
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: 16),
                     Text(
                       dynamicText2,
                       style: GoogleFonts.poppins(
-                        fontSize: 16,
+                        fontSize: 11,
                         fontWeight: FontWeight.w600,
                         color: Colors.black,
                       ),
@@ -75,16 +84,6 @@ class DetailsCard extends StatelessWidget {
                   ],
                 ),
               ],
-            ),
-            const SizedBox(height: 10),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(2),
-              child: LinearProgressIndicator(
-                value: progressPercent,
-                minHeight: 10,
-                color: Colors.black,
-                backgroundColor: Colors.grey[500],
-              ),
             ),
           ],
         ),

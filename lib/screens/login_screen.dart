@@ -3,8 +3,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:hive_flutter/hive_flutter.dart';
-import 'package:html/parser.dart';
-
 import 'home_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -18,120 +16,142 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _usernameController = TextEditingController();
   bool _isLoading = false;
 
-  Future<String?> _scrapeLeetCodeSpanValue(String username) async {
-    final String url = 'https://leetcode.com/u/$username/';
-    try {
-      final response = await http.get(Uri.parse(url));
-
-      if (response.statusCode == 200) {
-        final document = parse(response.body);
-        var elements = document.getElementsByClassName(
-          'mx-1 text-sm font-medium text-brand-orange dark:text-dark-brand-orange',
-        );
-        if (elements.isNotEmpty) {
-          return elements[0].text.trim();
-        } else {
-          throw Exception('Span element not found');
-        }
-      } else {
-        throw Exception('Failed to load LeetCode page');
-      }
-    } catch (e) {
-      print('Error scraping LeetCode data: $e');
-      return null;
-    }
-  }
-
   Future<Map<String, dynamic>> _fetchLeetCodeData(String username) async {
     const String apiUrl = 'https://leetcode.com/graphql';
-    final String query = '''
-  query {
-    matchedUser(username: "$username") {
-      username
-      githubUrl
-      twitterUrl
-      linkedinUrl
-      contributions {
-          points
-          questionCount
-          testcaseCount
-      }
-      profile {
-          realName
-          userAvatar
-          birthday
+    const String query = '''
+      query languageStats(\$username: String!) {
+        matchedUser(username: \$username) {
+          username
+          githubUrl
+          twitterUrl
+          linkedinUrl
+          contributions {
+            points
+            questionCount
+            testcaseCount
+          }
+          profile {
+            realName
+            userAvatar
+            birthday
+            ranking
+            reputation
+            websites
+            countryName
+            company
+            school
+            skillTags
+            aboutMe
+            starRating
+          }
+          badges {
+            id
+            displayName
+            icon
+            creationDate
+          }
+          upcomingBadges {
+            name
+            icon
+          }
+          activeBadge {
+            id
+            displayName
+            icon
+            creationDate
+          }
+          languageProblemCount {
+            languageName
+            problemsSolved
+          }
+          submitStats {
+            totalSubmissionNum {
+              difficulty
+              count
+              submissions
+            }
+            acSubmissionNum {
+              difficulty
+              count
+              submissions
+            }
+          }
+          submissionCalendar
+        }
+        userContestRanking(username: \$username) {
+          attendedContestsCount
+          rating
+          globalRanking
+          totalParticipants
+          topPercentage    
+        }
+        userContestRankingHistory(username: \$username) {
+          attended
+          trendDirection
+          problemsSolved
+          totalProblems
+          finishTimeInSeconds
+          rating
           ranking
-          reputation
-          websites
-          countryName
-          company
-          school
-          skillTags
-          aboutMe
-          starRating
-      }
-      badges {
-          id
-          displayName
-          icon
-          creationDate
-      }
-      upcomingBadges {
-          name
-          icon
-      }
-      activeBadge {
-          id
-          displayName
-          icon
-          creationDate
-      }
-      submitStats {
-          totalSubmissionNum {
-              difficulty
-              count
-              submissions
+          contest {
+            title
+            startTime
           }
-          acSubmissionNum {
-              difficulty
-              count
-              submissions
-          }
+        }
       }
-      submissionCalendar
-    }
-    userContestRanking(username: "$username") {
-      attendedContestsCount
-      rating
-      globalRanking
-      totalParticipants
-      topPercentage    
-    }
-    userContestRankingHistory(username: "$username") {
-      attended
-      trendDirection
-      problemsSolved
-      totalProblems
-      finishTimeInSeconds
-      rating
-      ranking
-      contest {
-        title
-        startTime
-      }
-    }
-  }
-  ''';
+    ''';
 
     try {
       final response = await http.post(
         Uri.parse(apiUrl),
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'query': query}),
+        body: jsonEncode({
+          'query': query,
+          'variables': {'username': username}
+        }),
       );
 
       if (response.statusCode == 200) {
         final Map<String, dynamic> data = jsonDecode(response.body)['data'];
+
+        final acSubmissionNum =
+            data['matchedUser']?['submitStats']?['acSubmissionNum'];
+        final totalSubmissionNum =
+            data['matchedUser']?['submitStats']?['totalSubmissionNum'];
+
+        double acAllSubmissions = 0;
+        double totalAllSubmissions = 0;
+
+        if (acSubmissionNum != null && acSubmissionNum is List) {
+          for (var entry in acSubmissionNum) {
+            if (entry['difficulty'] == 'All') {
+              acAllSubmissions = (entry['submissions'] is int)
+                  ? (entry['submissions'] as int).toDouble()
+                  : entry['submissions'] ?? 0.0;
+              break;
+            }
+          }
+        }
+
+        if (totalSubmissionNum != null && totalSubmissionNum is List) {
+          for (var entry in totalSubmissionNum) {
+            if (entry['difficulty'] == 'All') {
+              totalAllSubmissions = (entry['submissions'] is int)
+                  ? (entry['submissions'] as int).toDouble()
+                  : entry['submissions'] ?? 0.0;
+              break;
+            }
+          }
+        }
+
+        if (totalAllSubmissions != 0) {
+          double percentage = (acAllSubmissions / totalAllSubmissions) * 100;
+          print(
+              'AC Submission Success Rate: ${percentage.toStringAsFixed(2)}%');
+        } else {
+          print('Error: Total submissions for "All" difficulty is 0.');
+        }
+
         return data;
       } else {
         throw Exception('Failed to retrieve LeetCode data');
@@ -154,16 +174,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
     try {
       final userData = await _fetchLeetCodeData(username);
-      final scrapedValue = await _scrapeLeetCodeSpanValue(username);
-      print('Scraped value: $scrapedValue');
-
-      final submitStats = userData['matchedUser']?['submitStats'];
-      final submissionCalendar = userData['matchedUser']?['submissionCalendar'];
-
-      print('$userData');
-      print('submitStats: $submitStats');
-      print('submissionCalendar: $submissionCalendar');
-
       final box = Hive.box('userBox');
       await box.put('lc-userId', username);
 
