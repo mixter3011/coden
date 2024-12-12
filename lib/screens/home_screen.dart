@@ -37,6 +37,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   late String _statsdt = '';
   late String _statdt2 = '';
+  late String _statdt3 = '';
 
   void _extractSubmissionStats() {
     final submitStats = widget.data['matchedUser']?['submitStats'];
@@ -54,7 +55,7 @@ class _HomeScreenState extends State<HomeScreen> {
           acAllSubmissions = (entry['submissions'] is int)
               ? (entry['submissions'] as int).toDouble()
               : entry['submissions'] ?? 0.0;
-          _totalSubmissionCount = entry['count'] ?? 0; // Update here
+          _totalSubmissionCount = entry['count'] ?? 0;
           break;
         }
       }
@@ -75,9 +76,10 @@ class _HomeScreenState extends State<HomeScreen> {
       }
 
       setState(() {
-        _statsdt = 'AC Rate\nEasy\nMed\nHard';
-        _statdt2 =
-            '${_acceptanceRate.toStringAsFixed(2)}%\n${_getSolvedCount(acSubmissionNum, 'Easy')}\n${_getSolvedCount(acSubmissionNum, 'Medium')}\n${_getSolvedCount(acSubmissionNum, 'Hard')}';
+        _statsdt = 'ACCEPTANCE RATE';
+        _statdt2 = '${_acceptanceRate.toStringAsFixed(2)}%';
+        _statdt3 =
+            'You have solved ${_getSolvedCount(acSubmissionNum, 'Easy')} Easy, ${_getSolvedCount(acSubmissionNum, 'Medium')} Medium & ${_getSolvedCount(acSubmissionNum, 'Hard')} Hard Questions.';
         _totalSolved = acAllSubmissions.toInt();
       });
     }
@@ -207,8 +209,9 @@ class _HomeScreenState extends State<HomeScreen> {
                       title: "STATS",
                       imagePath: 'lib/assets/images/stats.png',
                       color: const Color.fromARGB(255, 243, 160, 104),
-                      dynamicText: _statsdt,
-                      dynamicText2: _statdt2,
+                      dynamicText: _statdt2,
+                      dynamicText2: _statsdt,
+                      dynamicText3: _statdt3,
                     ),
                   ),
                   const SizedBox(width: 10),
@@ -218,9 +221,10 @@ class _HomeScreenState extends State<HomeScreen> {
                       imagePath: 'lib/assets/images/streak.png',
                       color: Color.fromARGB(255, 192, 235, 128),
                       dynamicText: '7',
-                      subline1: 'DAY',
-                      subline2: 'STREAK',
-                      dynamicText2: '',
+                      subline1: '',
+                      subline2: '',
+                      additionalText:
+                          'Day Streak. Solve todays daily to keep you streak alive !',
                     ),
                   ),
                 ],
@@ -244,7 +248,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       imagePath: userBadge,
                       color: const Color.fromARGB(255, 138, 205, 255),
                       dynamicText: userBadgeName,
-                      subline: '',
+                      subline: 'Your Current Badge is',
                     ),
                   ),
                 ],

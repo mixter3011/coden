@@ -62,7 +62,7 @@ class _BadgeCardState extends State<BadgeCard> {
                     height: 80,
                     fit: BoxFit.cover,
                   ),
-            const SizedBox(height: 5),
+            const SizedBox(height: 2),
             Column(
               children: [
                 Text(
