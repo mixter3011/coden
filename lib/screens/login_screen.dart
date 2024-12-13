@@ -13,11 +13,11 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final TextEditingController _usernameController = TextEditingController();
-  bool _isLoading = false;
+  final TextEditingController _ctrl = TextEditingController();
+  bool _loading = false;
 
-  Future<Map<String, dynamic>> _fetchLeetCodeData(String username) async {
-    const String apiUrl = 'https://leetcode.com/graphql';
+  Future<Map<String, dynamic>> _fetch(String username) async {
+    const String url = 'https://leetcode.com/graphql';
     const String query = '''
       query languageStats(\$username: String!) {
         matchedUser(username: \$username) {
@@ -103,7 +103,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
     try {
       final response = await http.post(
-        Uri.parse(apiUrl),
+        Uri.parse(url),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'query': query,
@@ -114,18 +114,18 @@ class _LoginScreenState extends State<LoginScreen> {
       if (response.statusCode == 200) {
         final Map<String, dynamic> data = jsonDecode(response.body)['data'];
 
-        final acSubmissionNum =
+        final acsubmissions =
             data['matchedUser']?['submitStats']?['acSubmissionNum'];
-        final totalSubmissionNum =
+        final totalsubmissions =
             data['matchedUser']?['submitStats']?['totalSubmissionNum'];
 
-        double acAllSubmissions = 0;
-        double totalAllSubmissions = 0;
+        double actotal = 0;
+        double totalall = 0;
 
-        if (acSubmissionNum != null && acSubmissionNum is List) {
-          for (var entry in acSubmissionNum) {
+        if (acsubmissions != null && acsubmissions is List) {
+          for (var entry in acsubmissions) {
             if (entry['difficulty'] == 'All') {
-              acAllSubmissions = (entry['submissions'] is int)
+              actotal = (entry['submissions'] is int)
                   ? (entry['submissions'] as int).toDouble()
                   : entry['submissions'] ?? 0.0;
               break;
@@ -133,10 +133,10 @@ class _LoginScreenState extends State<LoginScreen> {
           }
         }
 
-        if (totalSubmissionNum != null && totalSubmissionNum is List) {
-          for (var entry in totalSubmissionNum) {
+        if (totalsubmissions != null && totalsubmissions is List) {
+          for (var entry in totalsubmissions) {
             if (entry['difficulty'] == 'All') {
-              totalAllSubmissions = (entry['submissions'] is int)
+              totalall = (entry['submissions'] is int)
                   ? (entry['submissions'] as int).toDouble()
                   : entry['submissions'] ?? 0.0;
               break;
@@ -144,36 +144,33 @@ class _LoginScreenState extends State<LoginScreen> {
           }
         }
 
-        if (totalAllSubmissions != 0) {
-          double percentage = (acAllSubmissions / totalAllSubmissions) * 100;
-          print(
-              'AC Submission Success Rate: ${percentage.toStringAsFixed(2)}%');
+        if (totalall != 0) {
+          double percentage = (actotal / totalall) * 100;
         } else {
-          print('Error: Total submissions for "All" difficulty is 0.');
+          throw Exception('Total submissions for "All" difficulty is 0.');
         }
 
         return data;
       } else {
-        throw Exception('Failed to retrieve LeetCode data');
+        throw Exception('Failed to retrieve data');
       }
     } catch (e) {
-      print('Error fetching LeetCode data: $e');
       rethrow;
     }
   }
 
-  void _navigateToHomeScreen() async {
-    final username = _usernameController.text.trim();
+  void _goto() async {
+    final username = _ctrl.text.trim();
 
     if (username.isEmpty) {
-      _showErrorDialog('Please enter a valid username');
+      _show('Please enter a valid username');
       return;
     }
 
-    setState(() => _isLoading = true);
+    setState(() => _loading = true);
 
     try {
-      final userData = await _fetchLeetCodeData(username);
+      final userdata = await _fetch(username);
       final box = Hive.box('userBox');
       await box.put('lc-userId', username);
 
@@ -182,19 +179,19 @@ class _LoginScreenState extends State<LoginScreen> {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder: (context) => HomeScreen(data: userData),
+          builder: (context) => HomeScreen(data: userdata),
         ),
       );
     } catch (e) {
-      _showErrorDialog(e.toString());
+      _show(e.toString());
     } finally {
       if (mounted) {
-        setState(() => _isLoading = false);
+        setState(() => _loading = false);
       }
     }
   }
 
-  void _showErrorDialog(String message) {
+  void _show(String message) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -239,7 +236,7 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
             const SizedBox(height: 20.0),
             TextField(
-              controller: _usernameController,
+              controller: _ctrl,
               decoration: InputDecoration(
                 hintText: 'Username',
                 hintStyle: GoogleFonts.poppins(color: Colors.white54),
@@ -258,10 +255,10 @@ class _LoginScreenState extends State<LoginScreen> {
               style: GoogleFonts.poppins(color: Colors.white),
             ),
             const SizedBox(height: 24.0),
-            _isLoading
+            _loading
                 ? const CircularProgressIndicator(color: Colors.white)
                 : ElevatedButton(
-                    onPressed: _navigateToHomeScreen,
+                    onPressed: _goto,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.blue,
                       padding: const EdgeInsets.symmetric(

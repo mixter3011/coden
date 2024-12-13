@@ -20,72 +20,73 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  String _userId = '';
-  late List<dynamic> _filteredContestHistory;
-  late String _userRanking = 'N/A';
-  late int _totalSolved = 0;
-  late int _totalSubmissionCount = 0;
-  double _acceptanceRate = 0.0;
+  String _id = '';
+  late List<dynamic> _filtered;
+  late String _ranking = 'N/A';
+  late int _total = 0;
+  late int _totalsubscount = 0;
+  double _acrate = 0.0;
+
+  bool isleet = true;
+  bool iscf = false;
 
   @override
   void initState() {
     super.initState();
-    _loadUserData();
-    _filterContestHistory();
-    _extractSubmissionStats();
+    _load();
+    _filter();
+    _extract();
   }
 
-  late String _statsdt = '';
-  late String _statdt2 = '';
-  late String _statdt3 = '';
+  late String _text = '';
+  late String _rate = '';
+  late String _subline = '';
 
-  void _extractSubmissionStats() {
-    final submitStats = widget.data['matchedUser']?['submitStats'];
-    if (submitStats != null) {
-      final acSubmissionNum =
-          submitStats['acSubmissionNum'] as List<dynamic>? ?? [];
-      final totalSubmissionNum =
-          submitStats['totalSubmissionNum'] as List<dynamic>? ?? [];
+  void _extract() {
+    final stats = widget.data['matchedUser']?['submitStats'];
+    if (stats != null) {
+      final acsubsnum = stats['acSubmissionNum'] as List<dynamic>? ?? [];
+      final totalsubsnum = stats['totalSubmissionNum'] as List<dynamic>? ?? [];
 
-      double acAllSubmissions = 0.0;
-      double totalAllSubmissions = 0.0;
+      double acsubs = 0.0;
+      double totalsubs = 0.0;
 
-      for (var entry in acSubmissionNum) {
+      for (var entry in acsubsnum) {
         if (entry['difficulty'] == 'All') {
-          acAllSubmissions = (entry['submissions'] is int)
+          acsubs = (entry['submissions'] is int)
               ? (entry['submissions'] as int).toDouble()
               : entry['submissions'] ?? 0.0;
-          _totalSubmissionCount = entry['count'] ?? 0;
+          _totalsubscount = entry['count'] ?? 0;
           break;
         }
       }
 
-      for (var entry in totalSubmissionNum) {
+      for (var entry in totalsubsnum) {
         if (entry['difficulty'] == 'All') {
-          totalAllSubmissions = (entry['submissions'] is int)
+          totalsubs = (entry['submissions'] is int)
               ? (entry['submissions'] as int).toDouble()
               : entry['submissions'] ?? 0.0;
           break;
         }
       }
 
-      if (totalAllSubmissions != 0) {
-        _acceptanceRate = (acAllSubmissions / totalAllSubmissions) * 100;
+      if (totalsubs != 0) {
+        _acrate = (acsubs / totalsubs) * 100;
       } else {
-        _acceptanceRate = 0.0;
+        _acrate = 0.0;
       }
 
       setState(() {
-        _statsdt = 'ACCEPTANCE RATE';
-        _statdt2 = '${_acceptanceRate.toStringAsFixed(2)}%';
-        _statdt3 =
-            'You have solved ${_getSolvedCount(acSubmissionNum, 'Easy')} Easy, ${_getSolvedCount(acSubmissionNum, 'Medium')} Medium & ${_getSolvedCount(acSubmissionNum, 'Hard')} Hard Questions.';
-        _totalSolved = acAllSubmissions.toInt();
+        _text = 'ACCEPTANCE RATE';
+        _rate = '${_acrate.toStringAsFixed(2)}%';
+        _subline =
+            'You have solved ${_solved(acsubsnum, 'Easy')} Easy, ${_solved(acsubsnum, 'Medium')} Medium & ${_solved(acsubsnum, 'Hard')} Hard Questions.';
+        _total = acsubs.toInt();
       });
     }
   }
 
-  int _getSolvedCount(List<dynamic> submissionList, String difficulty) {
+  int _solved(List<dynamic> submissionList, String difficulty) {
     return submissionList.firstWhere(
           (item) => item['difficulty'] == difficulty,
           orElse: () => {'count': 0},
@@ -93,54 +94,59 @@ class _HomeScreenState extends State<HomeScreen> {
         0;
   }
 
-  void _loadUserData() {
+  void _load() {
     final box = Hive.box('userBox');
     setState(() {
-      _userId = box.get('lc-userId', defaultValue: 'Unknown User');
-      final rawRanking = widget.data['matchedUser']?['profile']?['ranking'];
-      if (rawRanking != null) {
-        _userRanking = NumberFormat.decimalPattern().format(rawRanking);
+      _id = box.get('lc-userId', defaultValue: 'Unknown User');
+      final ranking = widget.data['matchedUser']?['profile']?['ranking'];
+      if (ranking != null) {
+        _ranking = NumberFormat.decimalPattern().format(ranking);
       } else {
-        _userRanking = 'N/A';
+        _ranking = 'N/A';
       }
     });
   }
 
-  void _filterContestHistory() {
-    final contestHistory = widget.data['userContestRankingHistory'] ?? [];
-    _filteredContestHistory = contestHistory
+  void _filter() {
+    final history = widget.data['userContestRankingHistory'] ?? [];
+    _filtered = history
         .where((contest) =>
             (contest['totalProblems'] ?? 0) > 0 &&
             (contest['problemsSolved'] ?? 0) > 0)
         .toList();
   }
 
-  List<FlSpot> _generateFilteredRatingPoints() {
+  List<FlSpot> _generategraphpoints() {
     return List.generate(
-      _filteredContestHistory.length,
+      _filtered.length,
       (index) => FlSpot(
         index.toDouble(),
-        _filteredContestHistory[index]['rating']?.toDouble() ?? 0.0,
+        (_filtered[index]['rating']?.toDouble() ?? 0.0),
       ),
     );
   }
 
-  String _getTopLanguage() {
-    final languageStats = widget.data['matchedUser']?['languageProblemCount'];
-    if (languageStats != null &&
-        languageStats is List &&
-        languageStats.isNotEmpty) {
-      final topLanguage = languageStats[0];
-      return topLanguage['languageName'] ?? 'Unknown';
+  String _getlang() {
+    final stats = widget.data['matchedUser']?['languageProblemCount'];
+    if (stats != null && stats is List && stats.isNotEmpty) {
+      var maxsolvedlang = stats.reduce((current, next) {
+        final currsolved = current['problemsSolved'] ?? 0;
+        final nextsolved = next['problemsSolved'] ?? 0;
+        return currsolved > nextsolved ? current : next;
+      });
+
+      return maxsolvedlang['languageName'] ?? 'N/A';
     }
     return 'N/A';
   }
 
-  String _getLanguageImagePath(String language) {
+  String _mapping(String language) {
     switch (language) {
       case 'C++':
         return 'lib/assets/images/cpp.png';
       case 'Python':
+        return 'lib/assets/images/py.png';
+      case 'Python3':
         return 'lib/assets/images/py.png';
       case 'Java':
         return 'lib/assets/images/java.png';
@@ -155,15 +161,15 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final userContestRanking = widget.data['userContestRanking'];
-    final ratingPoints = _generateFilteredRatingPoints();
-    final userAvatar =
-        widget.data['matchedUser']?['profile']?['userAvatar'] ?? '';
-    final userBadge = widget.data['matchedUser']?['activeBadge']?['icon'] ?? '';
-    final userBadgeName =
-        widget.data['matchedUser']?['activeBadge']?['displayName'] ?? '';
-    final topLanguage = _getTopLanguage();
-    final topLanguageImagePath = _getLanguageImagePath(topLanguage);
+    final ranking = widget.data['userContestRanking'];
+    final ratingpoints = _generategraphpoints();
+    final avatar = widget.data['matchedUser']?['profile']?['userAvatar'] ?? '';
+    final badge = widget.data['matchedUser']?['activeBadge']?['icon'] ??
+        'lib/assets/images/default-badge.png';
+    final badgename =
+        widget.data['matchedUser']?['activeBadge']?['displayName'] ?? 'NONE';
+    final lang = _getlang();
+    final langpath = _mapping(lang);
 
     return Scaffold(
       backgroundColor: const Color(0xFF232530),
@@ -178,11 +184,11 @@ class _HomeScreenState extends State<HomeScreen> {
                   children: [
                     ProfilePic(
                       radius: 40,
-                      avatarUrl: userAvatar,
+                      avatarurl: avatar,
                     ),
                     const SizedBox(width: 16),
                     Text(
-                      _userId,
+                      _id,
                       style: GoogleFonts.poppins(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
@@ -197,8 +203,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 title: "PROGRESS",
                 icon: Icons.analytics_sharp,
                 color: const Color.fromARGB(255, 255, 246, 144),
-                dynamicText: '$_totalSubmissionCount',
-                dynamicText2: 'Out of 3385\n$_userRanking platform ranking',
+                line: '$_totalsubscount',
+                subline: 'Out of 3385\n$_ranking platform ranking',
               ),
               const SizedBox(height: 5),
               Row(
@@ -207,23 +213,21 @@ class _HomeScreenState extends State<HomeScreen> {
                   Expanded(
                     child: SubDetailsCard(
                       title: "STATS",
-                      imagePath: 'lib/assets/images/stats.png',
+                      image: 'lib/assets/images/stats.png',
                       color: const Color.fromARGB(255, 243, 160, 104),
-                      dynamicText: _statdt2,
-                      dynamicText2: _statsdt,
-                      dynamicText3: _statdt3,
+                      text: _rate,
+                      rate: _text,
+                      subline: _subline,
                     ),
                   ),
                   const SizedBox(width: 10),
                   const Expanded(
                     child: StreakCard(
                       title: "STREAK",
-                      imagePath: 'lib/assets/images/streak.png',
+                      image: 'lib/assets/images/streak.png',
                       color: Color.fromARGB(255, 192, 235, 128),
-                      dynamicText: '7',
-                      subline1: '',
-                      subline2: '',
-                      additionalText:
+                      number: '7',
+                      text:
                           'Day Streak. Solve todays daily to keep you streak alive !',
                     ),
                   ),
@@ -234,82 +238,232 @@ class _HomeScreenState extends State<HomeScreen> {
                 children: [
                   Expanded(
                     child: BadgeCard(
-                      title: "TOP LANGUAGE",
-                      imagePath: topLanguageImagePath,
+                      name: "LANGUAGE",
+                      image: langpath,
                       color: const Color.fromARGB(255, 231, 149, 244),
-                      dynamicText: topLanguage,
+                      content: lang,
                       subline: 'Your most preffered language is',
                     ),
                   ),
                   const SizedBox(width: 10),
                   Expanded(
                     child: BadgeCard(
-                      title: "BADGE",
-                      imagePath: userBadge,
+                      name: "BADGE",
+                      image: badge,
                       color: const Color.fromARGB(255, 138, 205, 255),
-                      dynamicText: userBadgeName,
+                      content: badgename,
                       subline: 'Your Current Badge is',
                     ),
                   ),
                 ],
               ),
               const SizedBox(height: 20),
-              _buildContestStatisticsSection(userContestRanking),
+              Center(
+                  child: Text(
+                "CONTEST DATA",
+                style: GoogleFonts.poppins(color: Colors.white, fontSize: 18),
+              )),
+              const SizedBox(height: 20),
+              _contestats(ranking),
+              const SizedBox(height: 20),
+              Center(
+                child: Text(
+                  'PROGRESS CHART',
+                  style: GoogleFonts.poppins(
+                    fontSize: 18,
+                    fontWeight: FontWeight.normal,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 10),
+              _graph(ratingpoints),
               const SizedBox(height: 20),
               Text(
-                'Rating Progress Over Contests',
+                'CONTEST HISTORY',
                 style: GoogleFonts.poppins(
                   fontSize: 18,
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.normal,
                   color: Colors.white,
                 ),
               ),
               const SizedBox(height: 10),
-              _buildRatingProgressChart(ratingPoints),
-              const SizedBox(height: 20),
-              Text(
-                'Contest History',
-                style: GoogleFonts.poppins(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-              ),
-              const SizedBox(height: 10),
-              _buildContestHistoryList(_filteredContestHistory),
+              _history(_filtered),
             ],
+          ),
+        ),
+      ),
+      bottomNavigationBar: ClipRRect(
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(30),
+          topRight: Radius.circular(30),
+        ),
+        child: Container(
+          color: Colors.white,
+          child: BottomAppBar(
+            color: const Color(0xFF2C2F3E),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 0.5),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Expanded(
+                    child: TextButton(
+                      onPressed: () {
+                        setState(() {
+                          isleet = true;
+                          iscf = false;
+                        });
+                      },
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 8, horizontal: 20),
+                        backgroundColor:
+                            isleet ? Colors.blue : Colors.grey.withOpacity(0.1),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(15),
+                          side: BorderSide(
+                              color: Colors.white.withOpacity(0.4), width: 1),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Image.asset(
+                            'lib/assets/images/lc.webp',
+                            height: 28,
+                            width: 28,
+                            color: Colors.white,
+                          ),
+                          const SizedBox(width: 8),
+                          const Text(
+                            'LeetCode',
+                            style: TextStyle(color: Colors.white),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 20),
+                  Expanded(
+                    child: TextButton(
+                      onPressed: () {
+                        setState(() {
+                          iscf = true;
+                          isleet = false;
+                        });
+                      },
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 10, horizontal: 20),
+                        backgroundColor:
+                            iscf ? Colors.blue : const Color(0xFF2C2F3E),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(15),
+                          side: BorderSide(
+                              color: Colors.white.withOpacity(0.4), width: 1),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Image.asset(
+                            'lib/assets/images/cf.webp',
+                            height: 24,
+                            width: 24,
+                            color: Colors.white,
+                          ),
+                          const SizedBox(width: 8),
+                          const Text(
+                            'Codeforces',
+                            style: TextStyle(color: Colors.white),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
         ),
       ),
     );
   }
 
-  Widget _buildContestStatisticsSection(Map<String, dynamic>? contestRanking) {
+  Widget _contestats(Map<String, dynamic>? contestRanking) {
     if (contestRanking == null) return const SizedBox.shrink();
+
+    final avatar = widget.data['matchedUser']?['profile']?['userAvatar'] ?? '';
+    final ranking = contestRanking['rating'].toInt() ?? 0.0;
+    final granking = contestRanking['globalRanking'] ?? 0;
+    final percentage = contestRanking['topPercentage'] ?? 0;
+    final total = contestRanking['totalParticipants'] ?? 0;
 
     return Card(
       color: const Color(0xFF2C2F3E),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            _buildStatisticRow(
-                'Attended Contests', contestRanking['attendedContestsCount']),
-            _buildStatisticRow('Rating', contestRanking['rating']),
-            _buildStatisticRow(
-                'Global Ranking', contestRanking['globalRanking']),
-            _buildStatisticRow(
-                'Total Participants', contestRanking['totalParticipants']),
-            _buildStatisticRow(
-                'Top Percentage', '${contestRanking['topPercentage']}%'),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                ProfilePic(radius: 30, avatarurl: avatar),
+                const SizedBox(height: 8),
+                Text(
+                  'Rank # ${NumberFormat('#,###').format(granking)}',
+                  style: GoogleFonts.poppins(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  '$ranking Rating',
+                  style: GoogleFonts.poppins(
+                    color: Colors.white70,
+                    fontSize: 14,
+                  ),
+                ),
+              ],
+            ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                const Icon(
+                  Icons.public,
+                  color: Colors.white,
+                  size: 50,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Top $percentage%',
+                  style: GoogleFonts.poppins(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Out of ${NumberFormat('#,###').format(total)} users',
+                  style: GoogleFonts.poppins(
+                    color: Colors.white70,
+                    fontSize: 14,
+                  ),
+                ),
+              ],
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildStatisticRow(String label, dynamic value) {
+  Widget _stats(String label, dynamic value) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4.0),
       child: Row(
@@ -331,10 +485,10 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildRatingProgressChart(List<FlSpot> ratingPoints) {
+  Widget _graph(List<FlSpot> ratingPoints) {
     return Center(
       child: SizedBox(
-        width: MediaQuery.of(context).size.width * 0.8,
+        width: MediaQuery.of(context).size.width * 0.74,
         height: 150,
         child: LineChart(
           LineChartData(
@@ -346,7 +500,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 left: BorderSide.none,
                 top: BorderSide.none,
                 right: BorderSide.none,
-                bottom: BorderSide(color: Colors.white24),
+                bottom: BorderSide.none,
               ),
             ),
             lineBarsData: [
@@ -354,7 +508,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 spots: ratingPoints,
                 isCurved: false,
                 color: Colors.blue,
-                barWidth: 3,
+                barWidth: 1,
                 isStrokeCapRound: false,
                 dotData: const FlDotData(show: true),
                 belowBarData: BarAreaData(
@@ -376,7 +530,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildContestHistoryList(List<dynamic> contestHistory) {
+  Widget _history(List<dynamic> contestHistory) {
     return Column(
       children: contestHistory.map((contest) {
         final title = contest['contest']['title'];

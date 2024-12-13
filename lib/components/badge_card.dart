@@ -1,19 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:hive/hive.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class BadgeCard extends StatefulWidget {
-  final String title;
-  final String imagePath;
+  final String name;
+  final String image;
   final Color color;
-  final String dynamicText;
+  final String content;
   final String subline;
 
   const BadgeCard(
       {super.key,
-      required this.title,
-      required this.imagePath,
+      required this.name,
+      required this.image,
       required this.color,
-      required this.dynamicText,
+      required this.content,
       required this.subline});
 
   @override
@@ -21,10 +23,30 @@ class BadgeCard extends StatefulWidget {
 }
 
 class _BadgeCardState extends State<BadgeCard> {
+  Future<void> _navigateToLeetCode(BuildContext context) async {
+    final box = await Hive.openBox('userBox');
+    final username = box.get('lc-userId', defaultValue: 'Unknown User');
+
+    final url = 'https://leetcode.com/u/$username/';
+
+    try {
+      final Uri parsedUrl = Uri.parse(url);
+
+      if (await canLaunchUrl(parsedUrl)) {
+        await launchUrl(parsedUrl, mode: LaunchMode.externalApplication);
+      } else {
+        debugPrint('Could not launch $url');
+        ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Cannot open LeetCode profile')));
+      }
+    } catch (e) {
+      debugPrint('Error launching URL: $e');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final isNetworkImage =
-        Uri.tryParse(widget.imagePath)?.hasAbsolutePath ?? false;
+    final check = Uri.tryParse(widget.image)?.hasAbsolutePath ?? false;
 
     return Card(
       color: widget.color,
@@ -37,18 +59,50 @@ class _BadgeCardState extends State<BadgeCard> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.start,
           children: [
-            Text(
-              widget.title,
-              style: GoogleFonts.poppins(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: Colors.black,
-              ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  widget.name,
+                  style: GoogleFonts.poppins(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black,
+                  ),
+                ),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.2),
+                          blurRadius: 2,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                      border: Border.all(
+                        color: Colors.white.withOpacity(0.4),
+                      ),
+                    ),
+                    child: IconButton(
+                      icon: const Icon(
+                        Icons.upload_outlined,
+                        color: Colors.white,
+                      ),
+                      onPressed: () => _navigateToLeetCode(context),
+                    ),
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 10),
-            isNetworkImage
+            check
                 ? Image.network(
-                    widget.imagePath,
+                    widget.image,
                     width: 80,
                     height: 80,
                     fit: BoxFit.cover,
@@ -57,7 +111,7 @@ class _BadgeCardState extends State<BadgeCard> {
                     },
                   )
                 : Image.asset(
-                    widget.imagePath,
+                    widget.image,
                     width: 80,
                     height: 80,
                     fit: BoxFit.cover,
@@ -75,10 +129,10 @@ class _BadgeCardState extends State<BadgeCard> {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  widget.dynamicText,
+                  widget.content,
                   textAlign: TextAlign.center,
                   style: GoogleFonts.poppins(
-                    fontSize: 18,
+                    fontSize: 15,
                     fontWeight: FontWeight.w600,
                     color: Colors.black,
                   ),

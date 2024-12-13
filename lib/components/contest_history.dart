@@ -15,16 +15,15 @@ class ContestHistoryCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final regex = RegExp(r'\d+$');
     final match = regex.firstMatch(title);
-    final contestNumber = match != null ? match.group(0) : '';
-    final mainTitle = contestNumber != null
-        ? title.replaceAll(contestNumber, '').trim()
-        : title;
+    final contestnum = match != null ? match.group(0) : '';
+    final main =
+        contestnum != null ? title.replaceAll(contestnum, '').trim() : title;
 
-    String? imagePath;
-    if (mainTitle.contains('Weekly')) {
-      imagePath = 'lib/assets/images/weekly.png';
-    } else if (mainTitle.toLowerCase().contains('biweekly')) {
-      imagePath = 'lib/assets/images/biweekly.png';
+    String? image;
+    if (main.contains('Weekly')) {
+      image = 'lib/assets/images/weekly.png';
+    } else if (main.toLowerCase().contains('biweekly')) {
+      image = 'lib/assets/images/biweekly.png';
     }
 
     return Card(
@@ -40,10 +39,10 @@ class ContestHistoryCard extends StatelessWidget {
               color: Colors.blue,
               shape: BoxShape.circle,
             ),
-            child: imagePath != null
+            child: image != null
                 ? ClipOval(
                     child: Image.asset(
-                      imagePath,
+                      image,
                       fit: BoxFit.cover,
                     ),
                   )
@@ -56,7 +55,7 @@ class ContestHistoryCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    mainTitle.toUpperCase(),
+                    main.toUpperCase(),
                     style: GoogleFonts.poppins(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -75,7 +74,7 @@ class ContestHistoryCard extends StatelessWidget {
               ),
             ),
           ),
-          if (contestNumber != null && contestNumber.isNotEmpty)
+          if (contestnum != null && contestnum.isNotEmpty)
             Container(
               width: 80,
               height: 50,
@@ -84,7 +83,7 @@ class ContestHistoryCard extends StatelessWidget {
               child: Stack(
                 children: [
                   Text(
-                    contestNumber,
+                    contestnum,
                     style: GoogleFonts.poppins(
                       fontSize: 40,
                       fontWeight: FontWeight.bold,
@@ -95,7 +94,7 @@ class ContestHistoryCard extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    contestNumber,
+                    contestnum,
                     style: GoogleFonts.poppins(
                       fontSize: 40,
                       fontWeight: FontWeight.bold,

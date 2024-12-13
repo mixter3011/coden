@@ -3,12 +3,12 @@ import 'package:cached_network_image/cached_network_image.dart';
 
 class ProfilePic extends StatelessWidget {
   final double radius;
-  final String avatarUrl;
+  final String avatarurl;
 
   const ProfilePic({
     super.key,
     this.radius = 50.0,
-    required this.avatarUrl, // Now accepts avatarUrl from HomeScreen
+    required this.avatarurl,
   });
 
   @override
@@ -18,7 +18,7 @@ class ProfilePic extends StatelessWidget {
       backgroundColor: Colors.white,
       child: ClipOval(
         child: CachedNetworkImage(
-          imageUrl: avatarUrl, // Use the passed avatarUrl
+          imageUrl: avatarurl,
           placeholder: (context, url) => const CircularProgressIndicator(),
           errorWidget: (context, url, error) => Icon(
             Icons.account_circle,
