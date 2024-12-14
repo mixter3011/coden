@@ -3,16 +3,16 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:hive_flutter/hive_flutter.dart';
-import 'home_screen.dart';
+import 'lchome_screen.dart';
 
-class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+class LCLoginScreen extends StatefulWidget {
+  const LCLoginScreen({super.key});
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  State<LCLoginScreen> createState() => _LCLoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _LCLoginScreenState extends State<LCLoginScreen> {
   final TextEditingController _ctrl = TextEditingController();
   bool _loading = false;
 
@@ -179,7 +179,7 @@ class _LoginScreenState extends State<LoginScreen> {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder: (context) => HomeScreen(data: userdata),
+          builder: (context) => LCHomeScreen(data: userdata),
         ),
       );
     } catch (e) {

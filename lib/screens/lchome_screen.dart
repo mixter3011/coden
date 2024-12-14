@@ -10,16 +10,16 @@ import 'package:coden/components/contest_history.dart';
 import 'package:coden/components/profile_pic.dart';
 import 'package:intl/intl.dart';
 
-class HomeScreen extends StatefulWidget {
+class LCHomeScreen extends StatefulWidget {
   final Map<String, dynamic> data;
 
-  const HomeScreen({super.key, required this.data});
+  const LCHomeScreen({super.key, required this.data});
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  State<LCHomeScreen> createState() => _LCHomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _LCHomeScreenState extends State<LCHomeScreen> {
   String _id = '';
   late List<dynamic> _filtered;
   late String _ranking = 'N/A';
@@ -279,12 +279,14 @@ class _HomeScreenState extends State<HomeScreen> {
               const SizedBox(height: 10),
               _graph(ratingpoints),
               const SizedBox(height: 20),
-              Text(
-                'CONTEST HISTORY',
-                style: GoogleFonts.poppins(
-                  fontSize: 18,
-                  fontWeight: FontWeight.normal,
-                  color: Colors.white,
+              Center(
+                child: Text(
+                  'CONTEST HISTORY',
+                  style: GoogleFonts.poppins(
+                    fontSize: 18,
+                    fontWeight: FontWeight.normal,
+                    color: Colors.white,
+                  ),
                 ),
               ),
               const SizedBox(height: 10),
