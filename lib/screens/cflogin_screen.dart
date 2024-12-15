@@ -32,6 +32,9 @@ class _CFLoginScreenState extends State<CFLoginScreen> {
       final Map<String, dynamic> userInfoData = jsonDecode(inforesp.body);
       print('User Info: $userInfoData');
 
+      final user = userInfoData['result'][0];
+      final titlePhoto = user['titlePhoto'] ?? '';
+
       final ratingresp = await http.get(Uri.parse(ratingurl));
       if (ratingresp.statusCode != 200) {
         throw Exception('Failed to fetch user rating from CodeForces API.');
@@ -48,6 +51,7 @@ class _CFLoginScreenState extends State<CFLoginScreen> {
 
       final box = Hive.box('userBox');
       await box.put('cf-userId', username);
+      await box.put('cf-avatarUrl', titlePhoto);
 
       if (mounted) {
         Navigator.pushReplacement(
