@@ -34,6 +34,11 @@ class _CFLoginScreenState extends State<CFLoginScreen> {
 
       final user = userInfoData['result'][0];
       final titlePhoto = user['titlePhoto'] ?? '';
+      final contribution = user['contribution'] ?? 0;
+      final rating = user['rating'] ?? 0;
+      final friends = user['friendOfCount'] ?? 0;
+      final maxRating = user['maxRating'] ?? 0;
+      final maxRank = user['maxRank'] ?? '';
 
       final ratingresp = await http.get(Uri.parse(ratingurl));
       if (ratingresp.statusCode != 200) {
@@ -52,7 +57,12 @@ class _CFLoginScreenState extends State<CFLoginScreen> {
       final box = Hive.box('userBox');
       await box.put('cf-userId', username);
       await box.put('cf-avatarUrl', titlePhoto);
-
+      await box.put('cf-contribution', contribution);
+      await box.put('cf-rating', rating);
+      await box.put('cf-friends', friends);
+      await box.put('cf-maxRating', maxRating);
+      await box.put('cf-maxRank', maxRank);
+      await box.put('cf-contestHistory', ratingdata);
       if (mounted) {
         Navigator.pushReplacement(
           context,
