@@ -30,8 +30,6 @@ class _CFLoginScreenState extends State<CFLoginScreen> {
         throw Exception('Failed to fetch user info from CodeForces API.');
       }
       final Map<String, dynamic> userInfoData = jsonDecode(inforesp.body);
-      print('User Info: $userInfoData');
-
       final user = userInfoData['result'][0];
       final titlePhoto = user['titlePhoto'] ?? '';
       final contribution = user['contribution'] ?? 0;
@@ -45,15 +43,11 @@ class _CFLoginScreenState extends State<CFLoginScreen> {
         throw Exception('Failed to fetch user rating from CodeForces API.');
       }
       final List<dynamic> ratingdata = jsonDecode(ratingresp.body)['result'];
-      print('User Rating: $ratingdata');
-
       final statusresp = await http.get(Uri.parse(statusurl));
       if (statusresp.statusCode != 200) {
         throw Exception('Failed to fetch user status from CodeForces API.');
       }
       final List<dynamic> statusdata = jsonDecode(statusresp.body)['result'];
-      print('User Status: $statusdata');
-
       final box = Hive.box('userBox');
       await box.put('cf-userId', username);
       await box.put('cf-avatarUrl', titlePhoto);

@@ -1,9 +1,14 @@
+import 'dart:convert';
+
 import 'package:coden/components/cf_contest_history.dart';
 import 'package:coden/components/sub_detail_card.dart';
+import 'package:coden/screens/cflogin_screen.dart';
+import 'package:coden/screens/lchome_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:http/http.dart' as http;
 
 class CFHomeScreen extends StatefulWidget {
   const CFHomeScreen({super.key});
@@ -17,6 +22,149 @@ class _CFHomeScreenState extends State<CFHomeScreen> {
   late List<dynamic> _contestHistory;
   bool isleet = false;
   bool iscf = true;
+
+  Future<Map<String, dynamic>> _fetch(String username) async {
+    const String url = 'https://leetcode.com/graphql';
+    const String query = '''
+      query languageStats(\$username: String!) {
+        matchedUser(username: \$username) {
+          username
+          githubUrl
+          twitterUrl
+          linkedinUrl
+          contributions {
+            points
+            questionCount
+            testcaseCount
+          }
+          profile {
+            realName
+            userAvatar
+            birthday
+            ranking
+            reputation
+            websites
+            countryName
+            company
+            school
+            skillTags
+            aboutMe
+            starRating
+          }
+          badges {
+            id
+            displayName
+            icon
+            creationDate
+          }
+          upcomingBadges {
+            name
+            icon
+          }
+          activeBadge {
+            id
+            displayName
+            icon
+            creationDate
+          }
+          languageProblemCount {
+            languageName
+            problemsSolved
+          }
+          submitStats {
+            totalSubmissionNum {
+              difficulty
+              count
+              submissions
+            }
+            acSubmissionNum {
+              difficulty
+              count
+              submissions
+            }
+          }
+          submissionCalendar
+        }
+        userContestRanking(username: \$username) {
+          attendedContestsCount
+          rating
+          globalRanking
+          totalParticipants
+          topPercentage    
+        }
+        userContestRankingHistory(username: \$username) {
+          attended
+          trendDirection
+          problemsSolved
+          totalProblems
+          finishTimeInSeconds
+          rating
+          ranking
+          contest {
+            title
+            startTime
+          }
+        }
+      }
+    ''';
+
+    try {
+      final response = await http.post(
+        Uri.parse(url),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'query': query,
+          'variables': {'username': username}
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> data = jsonDecode(response.body)['data'];
+
+        final acsubmissions =
+            data['matchedUser']?['submitStats']?['acSubmissionNum'];
+        final totalsubmissions =
+            data['matchedUser']?['submitStats']?['totalSubmissionNum'];
+
+        double actotal = 0;
+        double totalall = 0;
+
+        if (acsubmissions != null && acsubmissions is List) {
+          for (var entry in acsubmissions) {
+            if (entry['difficulty'] == 'All') {
+              actotal = (entry['submissions'] is int)
+                  ? (entry['submissions'] as int).toDouble()
+                  : entry['submissions'] ?? 0.0;
+              break;
+            }
+          }
+        }
+
+        if (totalsubmissions != null && totalsubmissions is List) {
+          for (var entry in totalsubmissions) {
+            if (entry['difficulty'] == 'All') {
+              totalall = (entry['submissions'] is int)
+                  ? (entry['submissions'] as int).toDouble()
+                  : entry['submissions'] ?? 0.0;
+              break;
+            }
+          }
+        }
+
+        if (totalall != 0) {
+          double percentage = (actotal / totalall) * 100;
+        } else {
+          throw Exception('Total submissions for "All" difficulty is 0.');
+        }
+
+        return data;
+      } else {
+        throw Exception('Failed to retrieve data');
+      }
+    } catch (e) {
+      rethrow;
+    }
+  }
 
   @override
   void initState() {
@@ -236,10 +384,26 @@ class _CFHomeScreenState extends State<CFHomeScreen> {
                 children: [
                   Expanded(
                     child: TextButton(
-                      onPressed: () {
+                      onPressed: () async {
+                        final lcid =
+                            _userBox.get('lc-userId', defaultValue: '');
+                        final data = await _fetch(username);
+                        if (lcid != null && lcid.isNotEmpty) {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => LCHomeScreen(data: data)),
+                          );
+                        } else {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => const CFLoginScreen()),
+                          );
+                        }
                         setState(() {
-                          isleet = false;
                           iscf = true;
+                          isleet = false;
                         });
                       },
                       style: TextButton.styleFrom(

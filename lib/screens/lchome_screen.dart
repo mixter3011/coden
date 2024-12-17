@@ -2,6 +2,8 @@ import 'package:coden/components/badge_card.dart';
 import 'package:coden/components/detail_card.dart';
 import 'package:coden/components/streak_card.dart';
 import 'package:coden/components/sub_detail_card.dart';
+import 'package:coden/screens/cfhome_screen.dart';
+import 'package:coden/screens/cflogin_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:fl_chart/fl_chart.dart';
@@ -349,7 +351,23 @@ class _LCHomeScreenState extends State<LCHomeScreen> {
                   const SizedBox(width: 20),
                   Expanded(
                     child: TextButton(
-                      onPressed: () {
+                      onPressed: () async {
+                        final box = Hive.box('userBox');
+                        final cfid = box.get('cf-userId');
+
+                        if (cfid != null && cfid.isNotEmpty) {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => const CFHomeScreen()),
+                          );
+                        } else {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => const CFLoginScreen()),
+                          );
+                        }
                         setState(() {
                           iscf = true;
                           isleet = false;
